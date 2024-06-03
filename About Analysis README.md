@@ -1,0 +1,1 @@
+This project involves analysis of sales data of an e-commerce platform in Brazil. The project includes SQL queries related to order analysis, customer analysis, vendor analysis and RFM analysis. Additionally, a file containing the ERD scheme of the data set and where the outputs and findings of the queries are interpreted is also included in the appendix.
