@@ -20,7 +20,7 @@ ADD COLUMN purchase_date timestamp
 UPDATE commerce_data
 SET purchase_date = to_date(invoice_date, 'MM/DD/YYYY HH24:MI')
 
-------- Recency (Yenilik) Hesaplama
+------- Calculating Recency
 SELECT
     customer_id,
     MAX(purchase_date):: date AS last_purchase_date,
@@ -35,7 +35,7 @@ GROUP BY customer_id
 select * from recency
 
 
--- Frequency (Sıklık) Hesaplama
+-- Calculating Frequency
 
 SELECT
     customer_id,
@@ -56,7 +56,7 @@ GROUP BY customer_id
 
 select * from monetary
 
----- RFM Skorları Oluşturma
+----  Creating RFM Scores
 SELECT
     r.customer_id,
     NTILE(5) OVER (ORDER BY r.recency DESC) AS r_score,
@@ -71,7 +71,7 @@ ON r.customer_id = m.customer_id
 
 select* from rfm_scores
 
--- RFM Skorlarını Birleştirme ve Segmentasyon
+-- Combining and Segmentation RFM Scores
 SELECT
     rfm.customer_id,
     rfm.r_score,
