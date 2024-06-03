@@ -1,5 +1,5 @@
---Sipariş Analizi
---1.Aylık olarak order dağılımını inceleyiniz. Tarih verisi için order_approved_at kullanılmalıdır.)
+----Order Analysis
+----1. Examine the order distribution on a monthly basis. order_approved_at should be used for date data.
 Select * From orders
 
 SELECT  date_trunc('month', order_approved_at)::date
@@ -11,9 +11,8 @@ ORDER BY order_approved_month ASC
 
 
 
---Aylık olarak order status kırılımında order sayılarını inceleyiniz. 
---Sorgu sonucunda çıkan outputu excel ile görselleştiriniz. 
---Dramatik bir düşüşün ya da yükselişin olduğu aylar var mı? Veriyi inceleyerek yorumlayınız.
+--Check the order numbers in the order status breakdown on a monthly basis.
+--Are there months with a dramatic decline or rise? Examine and interpret the data.
 
 SELECT date_trunc('month',order_approved_at)::date AS order_approved_month,
 order_status, COUNT(order_id) AS order_count
@@ -23,8 +22,8 @@ GROUP BY 1,2
 ORDER BY 1,2 DESC
 
 
---Ürün kategorisi kırılımında sipariş sayılarını inceleyiniz. Özel günlerde öne çıkan kategoriler nelerdir?
---Yılbaşı 
+--Check out the order numbers in the product category breakdown. What are the prominent categories on special days?
+--New year
 SELECT o.order_approved_at::date, p.product_category_name,eng_product_name.product_category_name_english,count(o.order_id) AS order_count 
 FROM products AS p
 LEFT JOIN product_category_name_translation AS eng_product_name
@@ -42,7 +41,7 @@ GROUP BY 1,2,3
 ORDER BY order_count DESC
 LIMIT 10
 
---Sevgililer Günü
+--Valentine's Day
 
 SELECT o.order_approved_at::date, p.product_category_name,eng_product_name.product_category_name_english,count(o.order_id) AS order_count 
 FROM products AS p
@@ -63,7 +62,7 @@ LIMIT 10
 
 --Black Friday
 
---Black friday döneminde zirve yapan kategoriler:
+--Categories that peak during Black Friday:
 
 
 SELECT o.order_approved_at::date, p.product_category_name,eng_product_name.product_category_name_english,count(o.order_id) AS order_count 
@@ -83,10 +82,8 @@ GROUP BY 1,2,3
 ORDER BY order_count DESC
 LIMIT 10
 
---Haftanın günleri ve ay günleri bazında order sayılarını inceleyiniz. 
---Yazdığınız sorgunun outputu ile excel’de bir görsel oluşturup yorumlayınız.
-
---haftanın günleri
+--Examine the order numbers based on days of the week and days of the month.
+--days of the week
 SELECT
 CASE
 WHEN EXTRACT(DOW FROM order_approved_at) = 0 THEN 'Pazar'
@@ -103,7 +100,7 @@ WHERE order_approved_at IS NOT NULL
 GROUP BY 1
 ORDER BY 1 DESC
 
---ayın günleri
+--days of the months
 
 SELECT
     EXTRACT(DAY FROM order_approved_at) AS day_of_month,
@@ -114,12 +111,12 @@ GROUP BY 1
 ORDER BY 1
 
 
---Müşteri Analizi
---Hangi şehirlerdeki müşteriler daha çok alışveriş yapıyor? 
---Müşterinin şehrini en çok sipariş verdiği şehir olarak belirleyip analizi ona göre yapınız.
+--Customer Analysis
+--In which cities do customers shop more?
+--Determine the customer's city as the city from which they place the most orders and perform the analysis accordingly.
 
---en çok sipariş verilen şehir sıralaması		
-
+--most ordered city ranking
+	
 WITH CustomerOrderAmounts AS (
 SELECT c.customer_city,
 COUNT(o.order_id) AS order_amount
@@ -134,8 +131,7 @@ FROM CustomerOrderAmounts
 GROUP BY customer_city
 ORDER By total_order_amount DESC
 
---müşterilerin Şehri
-		
+--Customers' City		
 WITH CustomerOrderAmounts AS (
 SELECT
 c.customer_unique_id,
@@ -162,10 +158,10 @@ END AS city_status
 FROM
 RankedCities AS rc
 
---Satıcı Analizi
+--Seller Analysis
 
---Siparişleri en hızlı şekilde müşterilere ulaştıran satıcılar kimlerdir? 
---Top 5 getiriniz. 
+--Who are the sellers who deliver orders to customers in the fastest way?
+--Top 5 Sellers
 
 WITH SellerOrderDelivery AS (
 SELECT
@@ -189,8 +185,7 @@ ON sod.seller_id = s.seller_id
 ORDER BY 3 ASC
 limit 5
 
---Bu satıcıların order sayıları ile ürünlerindeki yorumlar ve puanlamaları inceleyiniz ve yorumlayınız. 
-
+-- Examine and comment on the order numbers of these sellers and the comments and ratings on their products.
 WITH seller_rates AS (
 SELECT
 s.seller_id,
@@ -224,8 +219,8 @@ FROM seller_rank
 WHERE seller_id IS NOT NULL
 ORDER BY order_count_rank, avg_rating_rank ASC
 
----Hangi satıcılar daha fazla kategoriye ait ürün satışı yapmaktadır? 
----Fazla kategoriye sahip satıcıların order sayıları da fazla mı?
+---Which sellers sell products from more categories?
+---Do sellers with many categories have a high number of orders?
 SELECT s.seller_id,
 COUNT(DISTINCT p.product_category_name) AS category_count,
 COUNT(DISTINCT oi.order_id) AS order_count
@@ -238,9 +233,8 @@ WHERE p.product_category_name IS NOT NULL
 GROUP BY s.seller_id
 ORDER BY category_count DESC
 
---Payment Analizi
---Ödeme yaparken taksit sayısı fazla olan kullanıcılar en çok hangi      bölgede yaşamaktadır? 
---Bu çıktıyı yorumlayınız.
+--Payment Analysis
+--Which region do the users with the highest number of installments live in?
 
 SELECT
 c.customer_city,
@@ -252,8 +246,7 @@ LEFT JOIN order_payments AS p ON o.order_id = p.order_id
 GROUP BY c.customer_city
 ORDER BY total_installments DESC
 
---Ödeme tipine göre başarılı order sayısı ve toplam başarılı ödeme tutarını hesaplayınız. En çok kullanılan ödeme tipinden en az olana göre sıralayınız.
-
+--Calculate the number of successful orders and the total successful payment amount according to the payment type. Rank them in order from the most used payment type to the least.
 WITH PaymentStatistics AS (
 SELECT
 p.payment_type,
@@ -273,8 +266,8 @@ SELECT
 FROM  PaymentStatistics
 ORDER BY  order_count DESC, total_payment_amount DESC
 
---Tek çekimde ve taksitle ödenen siparişlerin kategori bazlı analizini yapınız. 
---En çok hangi kategorilerde taksitle ödeme kullanılmaktadır?
+--Make a category-based analysis of orders paid in one shot and in installments.
+--In which categories is payment in installments used most?
 
 WITH PaymentDetails AS (
     SELECT
